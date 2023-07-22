@@ -7,7 +7,13 @@ const { describe } = require("node:test");
 const { join } = require("path");
 
 router.get("/", async (req, res) => {
-    const products = await Product.find();
+    const products = await Product.find
+    .or([
+        {price: { $gte : 10000}},
+        {isActive: true}
+    ]);
+    //const products = await Product.find();
+    //const products = await Product.find({isActive: true}).select({name:1, price:1});
     res.send(products);
 });
 
@@ -37,37 +43,56 @@ router.post("/", async (req, res) => {
 
 });
 
-router.put("/:id", (req, res) => {
-    const product = products.find(p => p.id == req.params.id);
-    if(!product) {
-        return res.status(404).send("aradığınız ürün bulunamadı.");
-    }
+router.put("/:id", async (req, res) => {
+    // const product = await Product.findById(req.params.id);
+    // if(!product) {
+    //     return res.status(404).send("aradığınız ürün bulunamadı.");
+    // }
 
-    const { error } = validateProduct(req.body);
+    // const { error } = validateProduct(req.body);
 
-    if(error) {
-        return res.status(400).send(result.error.details[0].message);
-    }
+    // if(error) {
+    //     return res.status(400).send(error.details[0].message);
+    // }
 
-    product.name = req.body.name;
-    product.price = req.body.price;
+    // product.name = req.body.name;
+    // product.price = req.body.price;
+    // product.description = req.body.description;
+    // product.imageUrl = req.body.imageUrl;
+    // product.isActive = req.body.isActive;
 
-    res.send(product);
+    // const updatedProduct = await product.save();
+
+    // res.send(updatedProduct);
+
+    const result = await Product.findByIdAndUpdate(req.params.id, {
+        $set: {
+            name: req.body.name,
+            description: req.body.description,
+            imageUrl: req.body.imageUrl,
+            isActive: req.body.isActive,
+        }
+    })
+
+    res.send(result);
 });
 
-router.delete("/:id", (req, res) => {
-    const product = products.find(p => p.id == req.params.id);
-    if(!product) {
-        return res.status(404).send("aradığınız ürün bulunamadı.");
-    }
 
-    const index = products.indexOf(product);
-    products.splice(index, 1);
+router.delete("/:id", async (req, res) => {
+    const product = await Product.findByIdAndDelete(req.params.id);
+    
+    // const product = products.find(p => p.id == req.params.id);
+    if(!product) {
+         return res.status(404).send("aradığınız ürün bulunamadı.");
+     }
+
+    // const index = products.indexOf(product);
+    // products.splice(index, 1);
     res.send(product);
 });
 
 router.get("/:id", (req, res) => {
-    const product = products.find(p => p.id == req.params.id);
+    const product = Product.findById(req.params.id);
 
     if(!product) {
         return res.status(404).send("aradığınız ürün bulunamadı.");
